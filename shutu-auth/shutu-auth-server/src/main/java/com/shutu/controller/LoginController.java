@@ -1,4 +1,5 @@
 package com.shutu.controller;
+
 import com.shutu.commons.security.cache.TokenStoreCache;
 import com.shutu.commons.security.user.UserDetail;
 import com.shutu.commons.security.utils.TokenUtils;
@@ -22,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
 
@@ -38,11 +38,11 @@ public class LoginController {
     @Autowired
     private CaptchaService captchaService;
     @Autowired
-    private  RedisUtils redisUtils;
+    private RedisUtils redisUtils;
     @Autowired
-    private  TokenStoreCache tokenStoreCache;
+    private TokenStoreCache tokenStoreCache;
     @Autowired
-    private  AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
     @Autowired
     private SysUserTokenService sysUserTokenService;
 

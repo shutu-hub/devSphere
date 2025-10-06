@@ -1,5 +1,16 @@
 package com.shutu.controller;
 
+import com.shutu.commons.security.user.SecurityUser;
+import com.shutu.commons.security.user.UserDetail;
+import com.shutu.commons.tools.constant.Constant;
+import com.shutu.commons.tools.exception.ErrorCode;
+import com.shutu.commons.tools.page.PageData;
+import com.shutu.commons.tools.utils.Result;
+import com.shutu.commons.tools.validator.AssertUtils;
+import com.shutu.commons.tools.validator.ValidatorUtils;
+import com.shutu.commons.tools.validator.group.AddGroup;
+import com.shutu.commons.tools.validator.group.DefaultGroup;
+import com.shutu.commons.tools.validator.group.UpdateGroup;
 import com.shutu.domain.dto.PasswordDTO;
 import com.shutu.domain.dto.SysUserDTO;
 import com.shutu.domain.entity.SysUserEntity;
@@ -7,7 +18,12 @@ import com.shutu.service.SysRoleUserService;
 import com.shutu.service.SysUserDetailService;
 import com.shutu.service.SysUserPostService;
 import com.shutu.service.SysUserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -142,17 +158,6 @@ public class SysUserController {
         return new Result();
     }
 
-    @GetMapping("export")
-    @Operation(summary = "导出")
-  //  @LogOperation("Export User")
-    @PreAuthorize("hasAuthority('sys:user:export')")
-    @Parameter(name = "username", description = "用户名")
-    public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
-        List<SysUserDTO> list = sysUserService.list(params);
-
-        ExcelUtils.exportExcelToTarget(response, null, "用户管理", list, SysUserExcel.class);
-    }
-
     /**
      * 根据用户Id，获取用户信息
      */
@@ -252,16 +257,6 @@ public class SysUserController {
 
         // 根据ID列表查询用户信息
         List<SysUserDTO> userList = sysUserService.getUsersByIds(ids);
-
-        // 统一处理头像地址，与 info() 接口保持一致
-        userList.forEach(data -> {
-            String headUrl = data.getHeadUrl();
-            if(!Objects.isNull(headUrl)){
-                // 作适当转化，避免影响微信用户头像展示
-                String replace = headUrl.replace(BACKEND_IP, DOMAIN_NAME).replaceFirst("https", "http").replaceFirst("http","https").replaceFirst(":9000","");
-                data.setHeadUrl(replace);
-            }
-        });
 
         return new Result<List<SysUserDTO>>().ok(userList);
     }

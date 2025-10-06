@@ -34,9 +34,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
 
     private final PasswordEncoder passwordEncoder;
 
-
     private final SysUserPostService sysUserPostService;
-
 
     private final SysUserTokenService sysUserTokenService;
 
@@ -212,4 +210,11 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
         return List.of();
     }
 
+    @Override
+    public List<SysUserDTO> getUsersByIds(List<Long> ids) {
+        List<SysUserEntity> userEntityList = baseDao.selectBatchIds(ids);
+
+        // 将Entity列表转换为DTO列表
+        return ConvertUtils.sourceToTarget(userEntityList, SysUserDTO.class);
+    }
 }

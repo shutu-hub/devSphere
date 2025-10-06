@@ -1,0 +1,26 @@
+package com.shutu.devSphere.model.dto.ws;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+/**
+ * 群聊 DTO
+ */
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class GroupMessageDTO implements Serializable {
+
+    private Long fromUserId;
+
+    private Long toRoomId;
+
+    private String content;
+
+    private static final long serialVersionUID = 1L;
+}

@@ -6,6 +6,18 @@
     <groupId>com.shutu</groupId>
     <artifactId>shutu-auth</artifactId>
     <packaging>pom</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>com.shutu</groupId>
+            <artifactId>shutu-commons-mybatis</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+        </dependency>
+    </dependencies>
 
     <parent>
         <groupId>com.shutu</groupId>

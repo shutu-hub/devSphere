@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>com.shutu</groupId>
-            <artifactId>shutu-auth</artifactId>
+            <artifactId>shutu-auth-client</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
@@ -23,12 +23,6 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.shutu</groupId>
-            <artifactId>shutu-commons-security</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

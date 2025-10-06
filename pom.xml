@@ -21,7 +21,7 @@
         <module>shutu-module</module>
         <module>shutu-gateway</module>
         <module>shutu-auth</module>
-        <module>zhiLiao</module>
+        <module>devSphere-chat</module>
     </modules>
 
 

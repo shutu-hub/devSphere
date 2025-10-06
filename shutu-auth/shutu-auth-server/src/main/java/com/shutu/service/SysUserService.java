@@ -1,9 +1,10 @@
 package com.shutu.service;
+
+import com.shutu.commons.mybatis.service.BaseService;
 import com.shutu.commons.tools.page.PageData;
 import com.shutu.commons.tools.utils.Result;
 import com.shutu.domain.dto.SysUserDTO;
 import com.shutu.domain.entity.SysUserEntity;
-import com.shutu.commons.mybatis.service.BaseService;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -86,4 +87,6 @@ public interface SysUserService extends BaseService<SysUserEntity> {
     Result<Set<SysUserEntity>> getMyFriend();
 
     List<SysUserEntity> queryUsersByIds(List<Long> userIds);
+
+    List<SysUserDTO> getUsersByIds(List<Long> ids);
 }
