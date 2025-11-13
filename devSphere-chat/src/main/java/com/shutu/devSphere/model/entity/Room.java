@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * 房间表
  */
-@TableName(value ="room")
+@TableName(value ="dev_sphere_room")
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

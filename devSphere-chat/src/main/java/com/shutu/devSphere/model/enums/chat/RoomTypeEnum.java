@@ -9,14 +9,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Description: 消息状态
+ * Description: 房间(会话)类型枚举
  */
 @AllArgsConstructor
 @Getter
 public enum RoomTypeEnum {
     GROUP(1, "群聊"),
-    PRIVATE(2, "私聊"),
-    ;
+    PRIVATE(2, "私聊");
 
     private final Integer type;
     private final String desc;

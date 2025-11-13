@@ -9,7 +9,7 @@ import com.shutu.devSphere.config.ThreadPoolConfig;
 import com.shutu.devSphere.model.dto.ws.GroupMessageDTO;
 import com.shutu.devSphere.model.dto.ws.PrivateMessageDTO;
 import com.shutu.devSphere.model.entity.UserRoomRelate;
-import com.shutu.devSphere.model.enums.chat.MessageTypeEnum;
+import com.shutu.devSphere.model.enums.chat.RoomTypeEnum;
 import com.shutu.devSphere.model.vo.message.ChatMessageVo;
 import com.shutu.devSphere.model.vo.ws.request.WSBaseReq;
 import com.shutu.devSphere.model.vo.ws.response.ChatMessageResp;
@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Description: websocket处理类
+ * websocket处理类
  * 管理连接、上线/下线、消息分发（私聊、群聊）、事件发布
  */
 @Component
@@ -58,26 +58,34 @@ public class WebSocketServiceImpl implements WebSocketService {
     private static final ConcurrentHashMap<Long, CopyOnWriteArrayList<Channel>> ONLINE_UID_MAP = new ConcurrentHashMap<>();
 
 
-    /**
-     * 注册新连接
-     * @param channel 渠道
-     */
     @Override
     public void connect(Channel channel) {
         Long userId = channel.attr(USER_ID_KEY).get();
-        ONLINE_WS_MAP.put(channel,userId);
+        // 1. 维护 Channel -> UserId 映射
+        ONLINE_WS_MAP.put(channel, userId);
+        // 2. 维护 UserId -> Channel[] 映射
+        ONLINE_UID_MAP.computeIfAbsent(userId, k -> new CopyOnWriteArrayList<>()).add(channel);
+        log.info("用户上线: {}, 当前在线人数: {}", userId, ONLINE_UID_MAP.size());
     }
 
-
-    /**
-     * 用户断开连接时移除 channel
-     * @param channel 渠道
-     */
     @Override
     public void removed(Channel channel) {
-        ONLINE_WS_MAP.remove(channel);
+        Long userId = ONLINE_WS_MAP.get(channel);
+        if (userId != null) {
+            // 1. 移除 Channel -> UserId 映射
+            ONLINE_WS_MAP.remove(channel);
+            // 2. 移除 UserId -> Channel[] 映射
+            CopyOnWriteArrayList<Channel> channels = ONLINE_UID_MAP.get(userId);
+            if (channels != null) {
+                channels.remove(channel);
+                // 如果该用户没有其他连接了，从大 Map 中移除
+                if (channels.isEmpty()) {
+                    ONLINE_UID_MAP.remove(userId);
+                }
+            }
+            log.info("用户下线: {}", userId);
+        }
     }
-
 
     /**
      * 在线发送给所有人
@@ -122,7 +130,7 @@ public class WebSocketServiceImpl implements WebSocketService {
     public void sendMessage(Channel channel, WSBaseReq req) {
         String msg = req.getData();
         ChatMessageVo chatMessage = JSONUtil.toBean(msg, ChatMessageVo.class);
-        MessageTypeEnum messageTypeEnum = MessageTypeEnum.of(chatMessage.getType());
+        RoomTypeEnum messageTypeEnum = RoomTypeEnum.of(chatMessage.getType());
         switch (messageTypeEnum) {
             case PRIVATE:
                 // 私聊

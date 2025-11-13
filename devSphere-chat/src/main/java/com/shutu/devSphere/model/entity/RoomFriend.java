@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * 用户私聊表
  */
-@TableName(value ="room_friend")
+@TableName(value ="dev_sphere_room_friend")
 @Data
 @Builder
 @AllArgsConstructor

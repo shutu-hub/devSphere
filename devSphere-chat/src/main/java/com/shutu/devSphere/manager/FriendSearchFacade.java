@@ -23,7 +23,6 @@ public class FriendSearchFacade {
         if (type == null) {
             throw new CommonException("未指定查询类型", ErrorCode.PARAMS_GET_ERROR);
         } else {
-
             DataSource dataSource = dataSourceRegistry.getDataSourceByType(type);
             return dataSource.doSearch(ids);
         }

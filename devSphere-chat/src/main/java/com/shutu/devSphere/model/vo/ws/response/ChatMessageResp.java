@@ -7,22 +7,28 @@ import lombok.NoArgsConstructor;
 import java.util.Date;
 
 /**
- * Description: 消息
- * Date: 2023-03-23
- * @author liuhuaicong
+ * 消息
  */
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMessageResp {
-
-    // 发送者信息
+    /**
+     * 发送者信息
+     */
     private UserInfo fromUser;
-    // 消息详情
+
+    /**
+     * 消息详情
+     */
     private Message message;
-    // 房间id
+
+    /**
+     * 房间id
+     */
     private Long roomId;
+
     @Data
     public static class UserInfo {
         // 用户名称

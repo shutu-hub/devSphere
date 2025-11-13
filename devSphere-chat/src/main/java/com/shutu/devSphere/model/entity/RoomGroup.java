@@ -12,7 +12,7 @@ import java.util.Date;
 /**
  * 群聊房间表
  */
-@TableName(value ="room_group")
+@TableName(value ="dev_sphere_room_group")
 @Data
 public class RoomGroup implements Serializable {
     /**

@@ -1,14 +1,12 @@
 package com.shutu.devSphere.model.vo.room;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.Date;
 
 /**
  * VO室
- *
- * @author cong
- * @date 2024/02/19
  */
 @Data
 public class RoomVo {
@@ -26,6 +24,7 @@ public class RoomVo {
      * 群最后消息的更新时间
      */
     private Date activeTime;
+
     /**
      * 会话中的最后一条消息
      */
@@ -42,7 +41,7 @@ public class RoomVo {
     private String avatar;
 
     /**
-     * 用户 ID
+     * 用户 ID (私聊时为对方ID，群聊时为群主ID)
      */
     private Long userId;
 
@@ -50,4 +49,10 @@ public class RoomVo {
      * 未读
      */
     private int unreadNum = 0;
+
+    /**
+     * 群聊成员总数
+     */
+    @Schema(description = "群聊成员总数")
+    private Integer memberCount;
 }
