@@ -66,9 +66,9 @@ devSphere-chat 是一个基于 Spring Boot 构建的企业级实时聊天服务�
 #### 消息处理引擎
 系统采用事件驱动架构处理各类消息：
 
-- [`PrivateMessageListener`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\common\listener\PrivateMessageListener.java#L23-L99): 私聊消息监听器，负责处理点对点消息的持久化
-- [`GroupMessageListener`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\common\listener\GroupMessageListener.java#L36-L86): 群聊消息监听器，处理群组内消息广播
-- [`MessageStreamListener`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\common\listener\MessageStreamListener.java#L39-L228): Redis Stream 消息监听器，消费消息队列中的数据
+- [`PrivateMessageListener`]: 私聊消息监听器，负责处理点对点消息的持久化
+- [`GroupMessageListener`]: 群聊消息监听器，处理群组内消息广播
+- [`MessageStreamListener`]: Redis Stream 消息监听器，消费消息队列中的数据
 
 #### 消息传输保障
 为了确保消息的可靠传输，系统实现了完整的消息生命周期管理：
@@ -81,19 +81,19 @@ devSphere-chat 是一个基于 Spring Boot 构建的企业级实时聊天服务�
 #### WebSocket 通信层
 基于 Netty 构建的高性能 WebSocket 服务器：
 
-- [`NettyServer`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\websocket\NettyServer.java#L23-L93): WebSocket 服务器启动配置
-- [`WebSocketServerHandler`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\websocket\Handler\WebSocketServerHandler.java#L17-L99): WebSocket 连接处理器
-- [`AuthHandler`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\websocket\Handler\AuthHandler.java#L19-L100): 连接认证处理器
+- [`NettyServer`]: WebSocket 服务器启动配置
+- [`WebSocketServerHandler`]: WebSocket 连接处理器
+- [`AuthHandler`]: 连接认证处理器
 
 ### 📦 数据模型设计
 
 系统采用清晰的数据模型来管理聊天相关信息：
 
-- [`Message`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\model\entity\Message.java#L17-L83): 消息实体，存储所有聊天内容
-- [`Room`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\model\entity\Room.java#L17-L66): 房间实体，表示聊天会话
-- [`RoomFriend`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\model\entity\RoomFriend.java#L17-L66): 私聊房间关联
-- [`RoomGroup`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\model\entity\RoomGroup.java#L14-L65): 群聊房间详情
-- [`UserRoomRelate`](file://D:\code\SureWin\devSphere-chat\src\main\java\com\shutu\devSphere\model\entity\UserRoomRelate.java#L17-L56): 用户与房间的关系
+- [`Message`]: 消息实体，存储所有聊天内容
+- [`Room`]: 房间实体，表示聊天会话
+- [`RoomFriend`]: 私聊房间关联
+- [`RoomGroup`]: 群聊房间详情
+- [`UserRoomRelate`]: 用户与房间的关系
 
 ### 🔄 消息流转流程
 
