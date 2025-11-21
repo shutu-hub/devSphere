@@ -1,9 +1,10 @@
 # devSphere-chat - 高性能实时聊天服务
 
 <div align="center">
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green)](#)  
-[![Netty](https://img.shields.io/badge/Netty-4.1.76.Final-blue)](#)  
-[![MyBatis Plus](https://img.shields.io/badge/MyBatis%20Plus-3.5.7-orange)](#)  
+
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-green)](#)
+[![Netty](https://img.shields.io/badge/Netty-4.1.76.Final-blue)](#)
+[![MyBatis Plus](https://img.shields.io/badge/MyBatis%20Plus-3.5.7-orange)](#)
 [![Redis](https://img.shields.io/badge/Redis-Streaming-red)](#)
 
 </div>
