@@ -33,4 +33,5 @@ public interface ErrorCode {
 
     int GROUP_NOT_FOUND = 20100;
     int BAD_REQUEST = 20400;
+    int DATA_NOT_EXIST = 20404;
 }

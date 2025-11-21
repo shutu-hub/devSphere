@@ -115,7 +115,12 @@ public class MessageStreamListener implements StreamListener<String, MapRecord<S
                         .eq(UserRoomRelate::getRoomId, roomId)
                         .set(UserRoomRelate::getLatestReadMsgId, message.getId()));
 
-                // 2.3 更新房间活跃时间
+                // 2.3用户之前将会话隐藏，当收到消息时需更新会话为显示
+                userRoomRelateService.update(new LambdaUpdateWrapper<UserRoomRelate>()
+                        .eq(UserRoomRelate::getRoomId, roomId)
+                        .set(UserRoomRelate::getIsDeleted, 0)); // 全员复活
+
+                // 2.4 更新房间活跃时间
                 Room room = new Room();
                 room.setId(roomId);
                 room.setLastMsgId(message.getId());

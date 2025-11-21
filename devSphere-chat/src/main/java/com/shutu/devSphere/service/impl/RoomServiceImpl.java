@@ -1,6 +1,7 @@
 package com.shutu.devSphere.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shutu.commons.security.user.SecurityUser;
@@ -68,6 +69,7 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room>
         //1、查询用户下的房间，后面可改为游标查询
         Page<UserRoomRelate> page = userRoomRelateService.page(new Page<>(current, size),
                 new LambdaQueryWrapper<UserRoomRelate>().eq(UserRoomRelate::getUserId, loginUserId)
+                        .ne(UserRoomRelate::getIsDeleted, 1)
                         .orderByDesc(UserRoomRelate::getUpdateTime));
         List<UserRoomRelate> userRoomRelateList = page.getRecords();
 
@@ -481,6 +483,111 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room>
         roomGroupService.updateById(roomGroup);
     }
 
+    /**
+     * 隐藏会话 (保留历史)
+     */
+    @Override
+    public void hideSession(Long roomId, Long userId) {
+        boolean updated = userRoomRelateService.update(new LambdaUpdateWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, userId)
+                .set(UserRoomRelate::getIsDeleted, 1)); // 仅标记不可见
+
+        if (!updated) {
+            throw new CommonException("操作失败", ErrorCode.DATA_NOT_EXIST);
+        }
+    }
+
+    /**
+     * 删除会话 (清空历史)
+     */
+    @Override
+    public void deleteSession(Long roomId, Long userId) {
+        // 1. 获取当前房间最新的消息ID
+        Room room = this.getById(roomId);
+        Long lastMsgId = (room != null && room.getLastMsgId() != null) ? room.getLastMsgId() : Long.MAX_VALUE;
+
+        // 2. 更新：标记删除 + 设置 minMsgId 为当前最新消息
+        boolean updated = userRoomRelateService.update(new LambdaUpdateWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, userId)
+                .set(UserRoomRelate::getIsDeleted, 1)
+                .set(UserRoomRelate::getMinMsgId, lastMsgId)); // 以后只看 lastMsgId 之后的消息
+
+        if (!updated) {
+            throw new CommonException("操作失败", ErrorCode.DATA_NOT_EXIST);
+        }
+    }
+
+    /**
+     * 获取单个房间详情
+     */
+    @Override
+    public RoomVo getRoomDetail(Long roomId, Long userId) {
+        // 1. 验证用户是否在房间内 (忽略 is_deleted，只要关系存在就能查)
+        UserRoomRelate relate = userRoomRelateService.getOne(new LambdaQueryWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, userId));
+
+        if (relate == null) {
+            throw new CommonException("您不在该房间中", ErrorCode.FORBIDDEN);
+        }
+
+        // 2. 查房间基础信息
+        Room room = this.getById(roomId);
+        if (room == null) {
+            throw new CommonException("房间不存在", ErrorCode.DATA_NOT_EXIST);
+        }
+
+        RoomVo roomVo = new RoomVo();
+        roomVo.setId(roomId);
+        roomVo.setType(room.getType());
+        roomVo.setActiveTime(room.getActiveTime());
+
+        // 3. 填充消息内容 (考虑 minMsgId)
+        Long lastMsgId = room.getLastMsgId();
+        Message message = (lastMsgId != null) ? messageService.getById(lastMsgId) : null;
+        Long minMsgId = (relate.getMinMsgId() != null) ? relate.getMinMsgId() : 0L;
+
+        if (message != null && message.getId() > minMsgId) {
+            roomVo.setContent(message.getContent());
+        } else {
+            roomVo.setContent("");
+        }
+
+        // 4. 未读数
+        Long readMsgId = relate.getLatestReadMsgId() != null ? relate.getLatestReadMsgId() : 0L;
+        Long effectiveReadId = Math.max(readMsgId, minMsgId);
+        long unreadCount = messageService.count(new LambdaQueryWrapper<Message>()
+                .eq(Message::getRoomId, roomId)
+                .gt(Message::getId, effectiveReadId));
+        roomVo.setUnreadNum((int) unreadCount);
+
+        // 5. 填充名称和头像
+        if (Objects.equals(room.getType(), RoomTypeEnum.GROUP.getType())) {
+            RoomGroup roomGroup = roomGroupService.getOne(new LambdaQueryWrapper<RoomGroup>().eq(RoomGroup::getRoomId, roomId));
+            long count = userRoomRelateService.count(new LambdaQueryWrapper<UserRoomRelate>().eq(UserRoomRelate::getRoomId, roomId));
+            roomVo.setMemberCount((int) count);
+            if (roomGroup != null) {
+                roomVo.setAvatar(roomGroup.getAvatar());
+                roomVo.setRoomName(roomGroup.getName());
+                roomVo.setUserId(roomGroup.getOwnerId());
+            }
+        } else {
+            RoomFriend roomFriend = roomFriendService.getOne(new LambdaQueryWrapper<RoomFriend>().eq(RoomFriend::getRoomId, roomId));
+            if (roomFriend != null) {
+                Long friendId = Objects.equals(roomFriend.getUid1(), userId) ? roomFriend.getUid2() : roomFriend.getUid1();
+                com.shutu.commons.tools.utils.Result<com.shutu.commons.security.user.UserDetail> res = userFeignClient.getById(friendId);
+                if (res.getData() != null) {
+                    roomVo.setAvatar(res.getData().getHeadUrl());
+                    roomVo.setRoomName(res.getData().getUsername());
+                }
+                roomVo.setUserId(friendId);
+            }
+        }
+
+        return roomVo;
+    }
 }
 
 

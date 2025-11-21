@@ -53,6 +53,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
 
         // 获取当前登录用户ID
         Long loginUserId = SecurityUser.getUserId();
+
         // 查找此房间的最新一条消息
         Room room = Db.lambdaQuery(Room.class).select(Room::getLastMsgId)
                 .eq(Room::getId, roomId).one();
@@ -66,9 +67,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
             throw new CommonException("更新已读消息失败", ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
+        UserRoomRelate relate = userRoomRelateService.getOne(new LambdaQueryWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, loginUserId));
+        Long minMsgId = (relate != null && relate.getMinMsgId() != null) ? relate.getMinMsgId() : 0L;
+
         int fetchSize = size + 1;
         LambdaQueryWrapper<Message> wrapper = new LambdaQueryWrapper<Message>()
-                .eq(Message::getRoomId, roomId);
+                .eq(Message::getRoomId, roomId)
+                .gt(Message::getId, minMsgId); //过滤掉删除前的历史消息
 
         // 如果 cursor 不为 null，则查询 ID < cursor 的消息 (更早的消息)
         if (cursor != null) {

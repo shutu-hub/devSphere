@@ -43,6 +43,16 @@ public class UserRoomRelate implements Serializable {
     private Long latestReadMsgId;
 
     /**
+     * 消息起始可见ID (用于删除会话时的逻辑清空)
+     * 查询消息时，只查 ID > minMsgId 的记录
+     */
+    private Long minMsgId;
+
+    /**
+     * 是否删除/隐藏会话 (0: 正常显示, 1: 删除/隐藏)
+     */
+    private Integer isDeleted;
+    /**
      * 创建时间
      */
     private Date createTime;

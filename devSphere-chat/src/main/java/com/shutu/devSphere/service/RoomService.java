@@ -1,12 +1,16 @@
 package com.shutu.devSphere.service;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shutu.commons.tools.exception.CommonException;
+import com.shutu.commons.tools.exception.ErrorCode;
 import com.shutu.devSphere.model.dto.chat.GroupCreateRequestDTO;
 import com.shutu.devSphere.model.dto.chat.RoomQueryRequest;
 import com.shutu.devSphere.model.dto.friend.FriendQueryRequest;
 import com.shutu.devSphere.model.dto.group.GroupUpdateRequestDTO;
 import com.shutu.devSphere.model.entity.Room;
+import com.shutu.devSphere.model.entity.UserRoomRelate;
 import com.shutu.devSphere.model.vo.friend.AddFriendVo;
 import com.shutu.devSphere.model.vo.friend.FriendContentVo;
 import com.shutu.devSphere.model.vo.group.GroupDetailVo;
@@ -50,4 +54,23 @@ public interface RoomService extends IService<Room> {
     AddFriendVo searchForAdd(String query);
 
     AddFriendVo searchFriendVoById(FriendQueryRequest friendQueryRequest);
+
+    /**
+     * 隐藏会话
+     */
+    public void hideSession(Long roomId, Long userId);
+
+    /**
+     * 删除会话 (清空历史)
+     */
+    public void deleteSession(Long roomId, Long userId);
+
+    /**
+     * 获取单个房间的会话详情 (用于点击联系人进入隐藏会话)
+     * @param roomId 房间ID
+     * @param userId 当前用户ID
+     * @return RoomVo
+     */
+    RoomVo getRoomDetail(Long roomId, Long userId);
+
 }

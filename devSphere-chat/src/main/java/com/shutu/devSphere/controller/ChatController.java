@@ -46,7 +46,7 @@ public class ChatController {
 
 
     /**
-     * 分页获取用户房间消息列表 (改为游标查询)
+     * 获取用户房间消息列表 (游标查询)
      * @param messageQueryRequest
      * @return
      */
@@ -107,5 +107,40 @@ public class ChatController {
         } catch (Exception e) {
             return  new Result<Void>().error("标记已读失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 隐藏会话 (不删记录)
+     */
+    @PutMapping("/hide")
+    @Operation(summary = "隐藏会话")
+    public Result<Void> hideConversation(@RequestParam Long roomId) {
+        Long loginUserId = SecurityUser.getUserId();
+        roomService.hideSession(roomId, loginUserId);
+        return new Result<Void>().ok();
+    }
+
+    /**
+     * 删除会话 (删除记录)
+     */
+    @DeleteMapping("/conversation")
+    @Operation(summary = "删除会话")
+    public Result<Void> deleteConversation(@RequestParam Long roomId) {
+        Long loginUserId = SecurityUser.getUserId();
+        roomService.deleteSession(roomId, loginUserId);
+        return new Result<Void>().ok();
+    }
+
+    /**
+     * 获取单个房间详情
+     * @param roomId
+     * @return
+     */
+    @GetMapping("/room/detail")
+    @Operation(summary = "获取会话详情")
+    public Result<RoomVo> getRoomDetail(@RequestParam Long roomId) {
+        Long loginUserId = SecurityUser.getUserId();
+        RoomVo roomVo = roomService.getRoomDetail(roomId, loginUserId);
+        return new Result<RoomVo>().ok(roomVo);
     }
 }
