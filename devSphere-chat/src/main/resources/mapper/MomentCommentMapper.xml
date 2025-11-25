@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shutu.devSphere.mapper.MomentCommentMapper">
+
+    <!-- 查询评论列表 -->
+    <select id="listByMomentId" resultType="com.shutu.devSphere.model.entity.MomentComment">
+        SELECT *
+        FROM moment_comment
+        WHERE moment_id = #{momentId}
+          AND deleted = 0
+        ORDER BY create_time ASC
+    </select>
+
+    <!-- 评论数量 +1 -->
+    <update id="incrCommentCount">
+        UPDATE moments_post
+        SET comment_count = comment_count + 1
+        WHERE id = #{momentId}
+    </update>
+
+    <!-- 评论数量 -1 -->
+    <update id="decrCommentCount">
+        UPDATE moments_post
+        SET comment_count = comment_count - 1
+        WHERE id = #{momentId}
+    </update>
+
+    <insert id="insert" parameterType="com.shutu.devSphere.model.entity.MomentComment">
+        INSERT INTO moment_comment (id, post_id, user_id, content, reply_to_comment_id, create_time)
+        VALUES (#{id}, #{postId}, #{userId}, #{content}, #{replyToCommentId}, NOW())
+    </insert>
+
+    <delete id="deleteByPost">
+        DELETE FROM moment_comment WHERE post_id = #{postId}
+    </delete>
+
+    <select id="selectCommentsByPostId" resultType="com.shutu.devSphere.model.vo.moment.CommentVo">
+        SELECT
+            c.id,
+            c.post_id,
+            c.user_id,
+            p.display_name as username,
+            p.avatar,
+            c.content,
+            c.reply_to_comment_id,
+            c.create_time,
+            r_p.user_id as replyToUserId,
+            r_p.display_name as replyToUsername
+        FROM moment_comment c
+        LEFT JOIN user_profile p ON c.user_id = p.user_id
+        LEFT JOIN moment_comment r ON c.reply_to_comment_id = r.id
+        LEFT JOIN user_profile r_p ON r.user_id = r_p.user_id
+        WHERE c.post_id = #{postId}
+          AND c.deleted = 0
+        ORDER BY c.create_time ASC
+    </select>
+</mapper>
