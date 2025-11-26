@@ -64,7 +64,7 @@ public class OssController {
     @PreAuthorize("hasAuthority('sys:oss:all')")
     public Result<OssDTO> selectInfoById(@Parameter(hidden = true) @RequestParam String id) {
         OssEntity ossEntity = ossService.selectById(id);
-        //类型转换
+        // 类型转换
         OssDTO ossDTO = new OssDTO();
         BeanUtils.copyProperties(ossEntity, ossDTO);
         return new Result<OssDTO>().ok(ossDTO);
@@ -84,7 +84,7 @@ public class OssController {
     @LogOperation("保存云存储配置信息")
     @PreAuthorize("hasAuthority('sys:oss:all')")
     public Result saveConfig(@RequestBody CloudStorageConfig config) throws Exception {
-        //校验类型
+        // 校验类型
         ValidatorUtils.validateEntity(config);
 
         paramsRemoteService.updateValueByCode(KEY, JsonUtils.toJsonString(config));
@@ -99,18 +99,18 @@ public class OssController {
             return new Result<UploadDTO>().error(ModuleErrorCode.UPLOAD_FILE_EMPTY);
         }
 
-        //上传文件
+        // 上传文件
         String extension = FilenameUtils.getExtension(file.getOriginalFilename());
 
         String url = OssFactory.build().uploadSuffix(file.getBytes(), extension);
 
-        //保存文件信息
+        // 保存文件信息
         OssEntity ossEntity = new OssEntity();
         ossEntity.setUrl(url);
         ossEntity.setCreateDate(new Date());
         ossService.insert(ossEntity);
 
-        //文件信息
+        // 文件信息
         UploadDTO dto = new UploadDTO();
         dto.setUrl(url);
         dto.setSize(file.getSize());
@@ -125,11 +125,11 @@ public class OssController {
             return MapUtil.newHashMap();
         }
 
-        //上传文件
+        // 上传文件
         String extension = FilenameUtils.getExtension(file.getOriginalFilename());
         String url = OssFactory.build().uploadSuffix(file.getBytes(), extension);
 
-        //保存文件信息
+        // 保存文件信息
         OssEntity ossEntity = new OssEntity();
         ossEntity.setUrl(url);
         ossEntity.setCreateDate(new Date());

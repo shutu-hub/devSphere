@@ -19,7 +19,6 @@ import com.shutu.devSphere.model.vo.room.RoomVo;
 
 import java.util.List;
 
-
 public interface RoomService extends IService<Room> {
 
     /**
@@ -37,9 +36,9 @@ public interface RoomService extends IService<Room> {
      */
     List<FriendContentVo> listFriendContentVo();
 
-
     /**
      * 创建群聊
+     * 
      * @param dto
      * @return 新群聊的 RoomVo
      */
@@ -67,10 +66,30 @@ public interface RoomService extends IService<Room> {
 
     /**
      * 获取单个房间的会话详情 (用于点击联系人进入隐藏会话)
+     * 
      * @param roomId 房间ID
      * @param userId 当前用户ID
      * @return RoomVo
      */
     RoomVo getRoomDetail(Long roomId, Long userId);
 
+    /**
+     * 退出群聊
+     * 
+     * @param roomId 房间ID
+     */
+    /**
+     * 退出群聊
+     * 
+     * @param roomId 房间ID
+     */
+    void quitGroup(Long roomId);
+
+    /**
+     * 清空聊天记录
+     * 
+     * @param roomId 房间ID
+     * @param userId 用户ID
+     */
+    void clearHistory(Long roomId, Long userId);
 }

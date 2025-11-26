@@ -11,7 +11,7 @@ import java.util.Date;
  * 动态评论
  */
 @Data
-@TableName("moment_comment")
+@TableName("moments_comment")
 public class MomentComment {
 
     @TableId(type = IdType.ASSIGN_ID)
@@ -47,7 +47,7 @@ public class MomentComment {
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)
-    private Date createTime;
+    private Date createdAt;
 
     /**
      * 软删

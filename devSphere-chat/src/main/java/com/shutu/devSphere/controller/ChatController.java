@@ -6,7 +6,6 @@ import com.shutu.commons.tools.utils.Result;
 import com.shutu.commons.tools.validator.ValidatorUtils;
 import com.shutu.commons.tools.validator.group.DefaultGroup;
 import com.shutu.devSphere.model.dto.chat.*;
-import com.shutu.devSphere.model.dto.friend.FriendQueryRequest;
 import com.shutu.devSphere.model.vo.friend.AddFriendVo;
 import com.shutu.devSphere.model.vo.friend.FriendContentVo;
 import com.shutu.devSphere.model.vo.room.RoomVo;
@@ -17,9 +16,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-
 
 /**
  * 聊天控制器
@@ -35,6 +32,7 @@ public class ChatController {
 
     /**
      * 分页获取用户房间会话列表
+     * 
      * @param roomQueryRequest
      * @return
      */
@@ -44,21 +42,22 @@ public class ChatController {
         return new Result<Page<RoomVo>>().ok(roomVoPage);
     }
 
-
     /**
      * 获取用户房间消息列表 (游标查询)
+     * 
      * @param messageQueryRequest
      * @return
      */
     @PostMapping("/message/page/vo")
-    public Result<CursorPage<ChatMessageResp>> listMessageVoByPage(@RequestBody MessageQueryRequest messageQueryRequest) {
+    public Result<CursorPage<ChatMessageResp>> listMessageVoByPage(
+            @RequestBody MessageQueryRequest messageQueryRequest) {
         CursorPage<ChatMessageResp> cursorPage = messageService.listMessageVoByPage(messageQueryRequest);
         return new Result<CursorPage<ChatMessageResp>>().ok(cursorPage);
     }
 
-
     /**
      * 获取好友列表
+     * 
      * @return
      */
     @PostMapping("/friend/list/vo")
@@ -69,6 +68,7 @@ public class ChatController {
 
     /**
      * 创建群聊接口
+     * 
      * @param dto 包含群名和好友ID列表
      * @return
      */
@@ -85,6 +85,7 @@ public class ChatController {
 
     /**
      * 搜索可添加的好友(按用户名)或群聊(按ID)
+     * 
      * @param searchRequestDTO
      * @return
      */
@@ -92,32 +93,6 @@ public class ChatController {
     public Result<AddFriendVo> searchForAdd(@RequestBody SearchRequestDTO searchRequestDTO) {
         AddFriendVo addFriendVo = roomService.searchForAdd(searchRequestDTO.getQuery());
         return new Result<AddFriendVo>().ok(addFriendVo);
-    }
-
-
-    /**
-     * 标记会话为已读
-     * @return
-     */
-    @PostMapping("/read")
-    public Result<Void> markConversationAsRead(@RequestParam("roomId") String roomId) {
-        try {
-            messageService.markConversationAsRead(Long.valueOf(roomId));
-            return new Result<Void>().ok();
-        } catch (Exception e) {
-            return  new Result<Void>().error("标记已读失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 隐藏会话 (不删记录)
-     */
-    @PutMapping("/hide")
-    @Operation(summary = "隐藏会话")
-    public Result<Void> hideConversation(@RequestParam Long roomId) {
-        Long loginUserId = SecurityUser.getUserId();
-        roomService.hideSession(roomId, loginUserId);
-        return new Result<Void>().ok();
     }
 
     /**
@@ -133,6 +108,7 @@ public class ChatController {
 
     /**
      * 获取单个房间详情
+     * 
      * @param roomId
      * @return
      */
@@ -142,5 +118,32 @@ public class ChatController {
         Long loginUserId = SecurityUser.getUserId();
         RoomVo roomVo = roomService.getRoomDetail(roomId, loginUserId);
         return new Result<RoomVo>().ok(roomVo);
+    }
+
+    /**
+     * 清空聊天记录
+     */
+    @PostMapping("/history/clear")
+    public Result<Void> clearHistory(@RequestParam Long roomId) {
+        roomService.clearHistory(roomId, SecurityUser.getUserId());
+        return new Result<Void>().ok();
+    }
+
+    /**
+     * 搜索聊天记录
+     */
+    @GetMapping("/history/search")
+    public Result<List<ChatMessageResp>> searchHistory(@RequestParam Long roomId, @RequestParam String keyword) {
+        List<ChatMessageResp> list = messageService.searchHistory(roomId, keyword);
+        return new Result<List<ChatMessageResp>>().ok(list);
+    }
+
+    /**
+     * 撤回消息
+     */
+    @PostMapping("/message/recall")
+    public Result<Void> recallMessage(@RequestParam Long messageId) {
+        messageService.recallMessage(messageId);
+        return new Result<Void>().ok();
     }
 }

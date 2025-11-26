@@ -7,6 +7,8 @@ import com.shutu.devSphere.model.dto.chat.MessageQueryRequest;
 import com.shutu.devSphere.model.entity.Message;
 import com.shutu.devSphere.model.vo.ws.response.ChatMessageResp;
 
+import java.util.List;
+
 public interface MessageService extends IService<Message> {
 
     /**
@@ -18,4 +20,20 @@ public interface MessageService extends IService<Message> {
     CursorPage<ChatMessageResp> listMessageVoByPage(MessageQueryRequest messageQueryRequest);
 
     void markConversationAsRead(Long roomId);
+
+    /**
+     * 搜索聊天记录
+     * 
+     * @param roomId  房间ID
+     * @param keyword 关键词
+     * @return 消息列表
+     */
+    List<ChatMessageResp> searchHistory(Long roomId, String keyword);
+
+    /**
+     * 撤回消息
+     * 
+     * @param messageId 消息ID
+     */
+    void recallMessage(Long messageId);
 }

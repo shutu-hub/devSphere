@@ -7,10 +7,9 @@
     <!-- 查询是否点过赞 -->
     <select id="hasLiked" resultType="int">
         SELECT COUNT(1)
-        FROM moment_like
-        WHERE moment_id = #{momentId}
+        FROM moments_like
+        WHERE post_id = #{momentId}
           AND user_id = #{userId}
-          AND deleted = 0
     </select>
 
     <!-- 点赞数量 +1 -->
@@ -29,7 +28,7 @@
 
     <!-- 插入点赞（如果不存在） -->
     <insert id="insertLikeIfNotExist">
-        INSERT INTO moment_like (id, post_id, user_id, create_time)
+        INSERT INTO moments_like (id, post_id, user_id, created_at)
         SELECT
             #{params.id,jdbcType=BIGINT},
             #{params.post_id},
@@ -37,33 +36,31 @@
             NOW()
         FROM DUAL
         WHERE NOT EXISTS (
-            SELECT 1 FROM moment_like
+            SELECT 1 FROM moments_like
             WHERE post_id = #{params.post_id}
               AND user_id = #{params.user_id}
-              AND deleted = 0
         )
     </insert>
 
     <delete id="deleteByPostUser">
-        DELETE FROM moment_like
+        DELETE FROM moments_like
         WHERE post_id = #{postId}
           AND user_id = #{userId}
     </delete>
 
     <delete id="deleteByPost">
-        DELETE FROM moment_like WHERE post_id = #{postId}
+        DELETE FROM moments_like WHERE post_id = #{postId}
     </delete>
 
     <select id="selectLikesByPostId" resultType="com.shutu.devSphere.model.vo.moment.UserVo">
         SELECT
-            l.user_id as uid,
+            l.user_id as userId,
             p.display_name as username,
             p.avatar
-        FROM moment_like l
+        FROM moments_like l
         LEFT JOIN user_profile p ON l.user_id = p.user_id
         WHERE l.post_id = #{postId}
-          AND l.deleted = 0
-        ORDER BY l.create_time DESC
+        ORDER BY l.created_at DESC
         LIMIT 10
     </select>
 </mapper>

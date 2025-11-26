@@ -10,7 +10,6 @@ import com.shutu.commons.security.user.SecurityUser;
 import com.shutu.commons.tools.exception.CommonException;
 import com.shutu.commons.tools.exception.ErrorCode;
 import com.shutu.devSphere.mapper.MessageMapper;
-import com.shutu.devSphere.mapper.RoomMapper;
 import com.shutu.devSphere.model.dto.chat.CursorPage;
 import com.shutu.devSphere.model.dto.chat.MessageQueryRequest;
 import com.shutu.devSphere.model.entity.Message;
@@ -18,13 +17,11 @@ import com.shutu.devSphere.model.entity.Room;
 import com.shutu.devSphere.model.entity.UserRoomRelate;
 import com.shutu.devSphere.model.vo.ws.response.ChatMessageResp;
 import com.shutu.devSphere.service.MessageService;
-import com.shutu.devSphere.service.RoomService;
 import com.shutu.devSphere.service.UserRoomRelateService;
 import com.shutu.devSphere.websocket.adapter.WSAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,7 +100,7 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
             messageList.remove(messageList.size() - 1);
         }
 
-        // --- 批量获取用户信息 (优化 N+1 问题) ---
+        // 批量获取用户信息 (优化 N+1 问题)
         java.util.Set<Long> userIds = messageList.stream()
                 .map(Message::getFromUid)
                 .collect(Collectors.toSet());
@@ -174,5 +171,78 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
         if (!update) {
             throw new CommonException("更新已读消息失败", ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Override
+    public List<ChatMessageResp> searchHistory(Long roomId, String keyword) {
+        Long userId = SecurityUser.getUserId();
+
+        // 1. 获取 minMsgId
+        UserRoomRelate relate = userRoomRelateService.getOne(new LambdaQueryWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, userId));
+        Long minMsgId = (relate != null && relate.getMinMsgId() != null) ? relate.getMinMsgId() : 0L;
+
+        // 2. 查询消息
+        List<Message> list = this.list(new LambdaQueryWrapper<Message>()
+                .eq(Message::getRoomId, roomId)
+                .gt(Message::getId, minMsgId)
+                .like(Message::getContent, keyword)
+                .orderByDesc(Message::getId));
+
+        // 3. 转换 VO (复用逻辑)
+        if (list.isEmpty()) {
+            return List.of();
+        }
+
+        java.util.Set<Long> userIds = list.stream().map(Message::getFromUid).collect(Collectors.toSet());
+        java.util.Map<Long, com.shutu.commons.security.user.UserDetail> userDetailMap = new java.util.HashMap<>();
+        if (!userIds.isEmpty()) {
+            try {
+                com.shutu.commons.tools.utils.Result<List<com.shutu.dto.SysUserDTO>> userResult = com.shutu.commons.tools.utils.SpringContextUtils
+                        .getBean(com.shutu.feign.UserFeignClient.class)
+                        .listByIds(new java.util.ArrayList<>(userIds));
+                if (userResult.getData() != null) {
+                    for (com.shutu.dto.SysUserDTO dto : userResult.getData()) {
+                        com.shutu.commons.security.user.UserDetail userDetail = new com.shutu.commons.security.user.UserDetail();
+                        userDetail.setId(dto.getId());
+                        userDetail.setUsername(dto.getUsername());
+                        userDetail.setHeadUrl(dto.getHeadUrl());
+                        userDetailMap.put(dto.getId(), userDetail);
+                    }
+                }
+            } catch (Exception e) {
+                log.error("批量获取用户信息失败", e);
+            }
+        }
+
+        return list.stream()
+                .map(msg -> wsAdapter.buildBatchMessageResp(msg, userDetailMap))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void recallMessage(Long messageId) {
+        Long userId = SecurityUser.getUserId();
+        Message message = this.getById(messageId);
+        if (message == null) {
+            throw new CommonException("消息不存在", ErrorCode.DATA_NOT_EXIST);
+        }
+
+        if (!message.getFromUid().equals(userId)) {
+            throw new CommonException("只能撤回自己的消息", ErrorCode.FORBIDDEN);
+        }
+
+        // 检查时间 (2分钟内)
+        long diff = System.currentTimeMillis() - message.getCreateTime().getTime();
+        if (diff > 2 * 60 * 1000) {
+            throw new CommonException("超过2分钟的消息无法撤回", ErrorCode.FORBIDDEN);
+        }
+
+        // 修改消息类型为撤回
+        message.setType(com.shutu.devSphere.model.enums.chat.MessageTypeEnum.RECALL.getType());
+        message.setContent("撤回了一条消息");
+        this.updateById(message);
     }
 }

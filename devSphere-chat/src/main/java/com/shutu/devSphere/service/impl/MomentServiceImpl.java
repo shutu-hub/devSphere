@@ -5,23 +5,27 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shutu.commons.tools.utils.Result;
 import com.shutu.devSphere.mapper.MomentCommentMapper;
 import com.shutu.devSphere.mapper.MomentLikeMapper;
 import com.shutu.devSphere.mapper.MomentPostMapper;
 import com.shutu.devSphere.mapper.UserProfileMapper;
 import com.shutu.devSphere.model.dto.moment.CreateMomentReq;
+import com.shutu.devSphere.model.dto.user.UserDto;
 import com.shutu.devSphere.model.entity.MomentComment;
 import com.shutu.devSphere.model.entity.MomentPost;
+import com.shutu.devSphere.model.entity.RoomFriend;
 import com.shutu.devSphere.model.entity.UserProfile;
 import com.shutu.devSphere.model.vo.moment.MomentResp;
 import com.shutu.devSphere.model.vo.moment.UserVo;
 import com.shutu.devSphere.service.MomentService;
 import com.shutu.devSphere.service.RoomFriendService;
+import com.shutu.dto.SysUserDTO;
+import com.shutu.feign.UserFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
-
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,7 @@ public class MomentServiceImpl implements MomentService {
     private final RoomFriendService roomFriendService;
     private final ObjectMapper objectMapper;
     private final MomentCommentMapper commentMapper;
+    private final UserFeignClient userFeignClient;
 
     @Override
     @Transactional
@@ -50,23 +55,22 @@ public class MomentServiceImpl implements MomentService {
         post.setCommentCount(0);
         post.setVisibility(req.getVisibility() == null ? 1 : req.getVisibility());
         postMapper.insert(post);
-
         // build response
-        return toMomentResp(post, userId);
+        return toMomentResp(post, userId, Collections.emptyMap());
     }
 
     @Override
     public List<MomentResp> pageMoments(Long userId, int page, int size) {
         // 1. 获取好友列表
-        List<com.shutu.devSphere.model.entity.RoomFriend> friends = roomFriendService
-                .list(new LambdaQueryWrapper<com.shutu.devSphere.model.entity.RoomFriend>()
-                        .eq(com.shutu.devSphere.model.entity.RoomFriend::getUid1, userId)
+        List<RoomFriend> friends = roomFriendService
+                .list(new LambdaQueryWrapper<RoomFriend>()
+                        .eq(RoomFriend::getUid1, userId)
                         .or()
-                        .eq(com.shutu.devSphere.model.entity.RoomFriend::getUid2, userId));
+                        .eq(RoomFriend::getUid2, userId));
 
         List<Long> friendIds = new ArrayList<>();
         friendIds.add(userId); // 自己
-        for (com.shutu.devSphere.model.entity.RoomFriend f : friends) {
+        for (RoomFriend f : friends) {
             friendIds.add(f.getUid1().equals(userId) ? f.getUid2() : f.getUid1());
         }
 
@@ -76,9 +80,36 @@ public class MomentServiceImpl implements MomentService {
                 .orderByDesc(MomentPost::getCreatedAt);
 
         Page<MomentPost> res = postMapper.selectPage(pg, qw);
+        List<MomentPost> records = res.getRecords();
+
+        // Batch fetch user info via Feign
+        Set<Long> userIdSet = new HashSet<>();
+        for (MomentPost p : records) {
+            userIdSet.add(p.getUserId());
+        }
+        List<Long> idsList = new ArrayList<>(userIdSet);
+        // simple batch size of 20
+        Map<Long, SysUserDTO> userMap = new HashMap<>();
+        int batchSize = 20;
+        for (int i = 0; i < idsList.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, idsList.size());
+            List<Long> sub = idsList.subList(i, end);
+            try {
+                Result<List<SysUserDTO>> listResult = userFeignClient.listByIds(sub);
+                List<SysUserDTO> data = listResult.getData();
+                if (data != null) {
+                    for (SysUserDTO u : data) {
+                        userMap.put(u.getId(), u);
+                    }
+                }
+            } catch (Exception e) {
+                // fallback: ignore and continue
+            }
+        }
+
         List<MomentResp> list = new ArrayList<>();
-        for (MomentPost p : res.getRecords()) {
-            list.add(toMomentResp(p, userId));
+        for (MomentPost p : records) {
+            list.add(toMomentResp(p, userId, userMap));
         }
         return list;
     }
@@ -139,7 +170,7 @@ public class MomentServiceImpl implements MomentService {
         commentMapper.deleteByPost(postId);
     }
 
-    private MomentResp toMomentResp(MomentPost p, Long currentUserId) {
+    private MomentResp toMomentResp(MomentPost p, Long currentUserId, Map<Long, SysUserDTO> userMap) {
         MomentResp r = new MomentResp();
         r.setId(p.getId());
         r.setUserId(p.getUserId());
@@ -156,11 +187,20 @@ public class MomentServiceImpl implements MomentService {
         r.setCommentCount(Optional.ofNullable(p.getCommentCount()).orElse(0));
         r.setCreatedAt(Optional.ofNullable(p.getCreatedAt()).map(Date::toString).orElse(""));
 
-        UserProfile up = userProfileMapper.selectById(p.getUserId());
+        SysUserDTO ud = userMap.get(p.getUserId());
         UserVo u = new UserVo();
-        u.setUid(p.getUserId());
-        u.setUsername(up == null ? String.valueOf(p.getUserId()) : up.getDisplayName());
-        u.setAvatar(up == null ? null : up.getAvatar());
+        u.setUserId(p.getUserId());
+        if (ud != null) {
+            u.setUsername(ud.getUsername());
+            u.setAvatar(ud.getHeadUrl());
+            u.setDisplayName(ud.getRealName());
+        } else {
+            // fallback to existing profile mapper if needed
+            UserProfile up = userProfileMapper.selectById(p.getUserId());
+            u.setUsername(up == null ? String.valueOf(p.getUserId()) : up.getDisplayName());
+            u.setAvatar(up == null ? null : up.getAvatar());
+            u.setDisplayName(up == null ? null : up.getDisplayName());
+        }
         r.setUser(u);
 
         // 填充互动详情
@@ -174,7 +214,6 @@ public class MomentServiceImpl implements MomentService {
         } else {
             r.setIsLiked(false);
         }
-
         return r;
     }
 }

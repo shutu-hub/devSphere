@@ -643,4 +643,70 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room>
 
         return roomVo;
     }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void quitGroup(Long roomId) {
+        Long userId = SecurityUser.getUserId();
+        String username = SecurityUser.getUser().getUsername();
+
+        // 1. 检查群是否存在
+        RoomGroup group = roomGroupService.getOne(new LambdaQueryWrapper<RoomGroup>()
+                .eq(RoomGroup::getRoomId, roomId));
+        if (group == null) {
+            throw new CommonException("群聊不存在", ErrorCode.GROUP_NOT_FOUND);
+        }
+
+        // 2. 检查是否是群主
+        if (group.getOwnerId().equals(userId)) {
+            throw new CommonException("群主不能退出群聊，请先转让群主或解散群聊", ErrorCode.FORBIDDEN);
+        }
+
+        // 3. 删除房间成员关系
+        boolean removed = userRoomRelateService.remove(new LambdaQueryWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, userId));
+        if (!removed) {
+            throw new CommonException("您不在该群聊中", ErrorCode.DATA_NOT_EXIST);
+        }
+
+        // 4. 删除好友列表中的群聊关系
+        userFriendRelateService.remove(new LambdaQueryWrapper<UserFriendRelate>()
+                .eq(UserFriendRelate::getUserId, userId)
+                .eq(UserFriendRelate::getRelateId, roomId)
+                .eq(UserFriendRelate::getRelateType, RoomTypeEnum.GROUP.getType()));
+
+        // 5. 发送退出消息
+        Message msg = new Message();
+        msg.setRoomId(roomId);
+        msg.setFromUid(userId);
+        msg.setType(MessageTypeEnum.TEXT.getType()); // 或者系统消息类型
+        msg.setContent(username + " 退出了群聊");
+        messageService.save(msg);
+
+        // 更新房间最后活跃时间
+        Room room = this.getById(roomId);
+        if (room != null) {
+            room.setLastMsgId(msg.getId());
+            room.setActiveTime(msg.getCreateTime());
+            this.updateById(room);
+        }
+    }
+
+    @Override
+    public void clearHistory(Long roomId, Long userId) {
+        // 1. 获取当前房间最新的消息ID
+        Room room = this.getById(roomId);
+        Long lastMsgId = (room != null && room.getLastMsgId() != null) ? room.getLastMsgId() : Long.MAX_VALUE;
+
+        // 2. 更新：设置 minMsgId 为当前最新消息 (不改变 isDeleted 状态)
+        boolean updated = userRoomRelateService.update(new LambdaUpdateWrapper<UserRoomRelate>()
+                .eq(UserRoomRelate::getRoomId, roomId)
+                .eq(UserRoomRelate::getUserId, userId)
+                .set(UserRoomRelate::getMinMsgId, lastMsgId));
+
+        if (!updated) {
+            throw new CommonException("操作失败", ErrorCode.DATA_NOT_EXIST);
+        }
+    }
 }

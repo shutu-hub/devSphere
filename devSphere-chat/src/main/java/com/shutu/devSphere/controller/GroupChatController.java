@@ -54,4 +54,11 @@ public class GroupChatController {
         roomService.updateGroupInfo(dto);
         return new Result();
     }
+
+    @PostMapping("/quit")
+    @Operation(summary = "退出群聊")
+    public Result quitGroup(@Parameter(description = "房间ID") @RequestParam Long roomId) {
+        roomService.quitGroup(roomId);
+        return new Result();
+    }
 }

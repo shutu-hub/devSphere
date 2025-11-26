@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Import;
 
 @MapperScan("com.shutu.devSphere.mapper")
-@EnableFeignClients(basePackages = "com.shutu.feign")
+@EnableFeignClients(basePackages = { "com.shutu.devSphere.service", "com.shutu.feign" })
 @Import(cn.hutool.extra.spring.SpringUtil.class)
 @SpringBootApplication(scanBasePackages = "com.shutu")
 public class DevSphereApplication {

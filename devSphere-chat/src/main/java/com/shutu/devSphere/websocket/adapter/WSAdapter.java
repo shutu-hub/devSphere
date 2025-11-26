@@ -15,9 +15,8 @@ import com.shutu.devSphere.model.vo.ws.response.WSBaseResp;
 import com.shutu.devSphere.service.RoomFriendService;
 import com.shutu.feign.UserFeignClient;
 import jakarta.annotation.Resource;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**

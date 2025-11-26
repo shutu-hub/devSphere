@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class UserVo {
-    private Long uid;
+    private Long userId; // 修改: uid -> userId
     private String username;
     private String avatar;
     private String displayName;

@@ -11,7 +11,7 @@ import java.util.Date;
  * 动态点赞
  */
 @Data
-@TableName("moment_like")
+@TableName("moments_like")
 public class MomentLike {
 
     @TableId(type = IdType.ASSIGN_ID)
@@ -26,8 +26,6 @@ public class MomentLike {
     private Long userId;
 
     @TableField(fill = FieldFill.INSERT)
-    private Date createTime;
+    private Date createdAt;
 
-    @TableLogic
-    private Integer deleted;
 }
