@@ -21,7 +21,7 @@ spring:
         #nacos的命名空间ID，默认是public
         #        namespace: ${nacos_namespace:nacos-namespace}
         namespace: 629b307b-d91b-4c54-974f-a121ba0947ac
-        service: devSphere-chat-server
+        service: devSphere-interview-server
         username: ${nacos_username:nacos}
         password: ${nacos_password:Zhao991023}
       config:
@@ -33,9 +33,9 @@ spring:
         file-extension: yaml
         #指定共享配置，且支持动态刷新
         extension-configs:
-          # - data-id: datasource.yaml
-          #   group: ${spring.cloud.nacos.config.group}
-          #   refresh: true
+          - data-id: datasource-interview.yaml
+            group: ${spring.cloud.nacos.config.group}
+            refresh: true
           - data-id: common.yaml
             group: ${spring.cloud.nacos.config.group}
             refresh: true

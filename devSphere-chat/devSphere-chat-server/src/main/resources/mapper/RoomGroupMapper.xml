@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.shutu.devSphere.mapper.RoomGroupMapper">
+<mapper namespace="com.shutu.mapper.RoomGroupMapper">
 
-    <resultMap id="BaseResultMap" type="com.shutu.devSphere.model.entity.RoomGroup">
+    <resultMap id="BaseResultMap" type="com.shutu.model.entity.RoomGroup">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="ownerId" column="ownerId" jdbcType="BIGINT"/>
             <result property="roomId" column="roomId" jdbcType="BIGINT"/>

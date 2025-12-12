@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.shutu.devSphere.mapper.MomentLikeMapper">
+<mapper namespace="com.shutu.mapper.MomentLikeMapper">
 
     <!-- 查询是否点过赞 -->
     <select id="hasLiked" resultType="int">
@@ -52,7 +52,7 @@
         DELETE FROM moments_like WHERE post_id = #{postId}
     </delete>
 
-    <select id="selectLikesByPostId" resultType="com.shutu.devSphere.model.vo.moment.UserVo">
+    <select id="selectLikesByPostId" resultType="com.shutu.model.vo.moment.UserVo">
         SELECT
             l.user_id as userId,
             p.display_name as username,

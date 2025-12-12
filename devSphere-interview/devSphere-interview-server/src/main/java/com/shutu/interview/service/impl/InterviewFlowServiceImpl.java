@@ -18,15 +18,11 @@ public class InterviewFlowServiceImpl implements InterviewFlowService {
     private final InterviewService interviewService;
     private final QuestionService questionService;
 
-    // TODO: Fetch from Resume/Job Service
-    private static final String MOCK_RESUME = "Java Developer with 5 years experience in Spring Boot, MySQL, and Microservices.";
-    private static final String MOCK_JD = "Looking for a Senior Java Engineer proficient in high concurrency, distributed systems, and AI integration.";
-
     public InterviewFlowServiceImpl(InterviewStateService interviewStateService,
-                                    QuestionGenerationService questionGenerationService,
-                                    InterviewLogService interviewLogService,
-                                    InterviewService interviewService,
-                                    QuestionService questionService) {
+            QuestionGenerationService questionGenerationService,
+            InterviewLogService interviewLogService,
+            InterviewService interviewService,
+            QuestionService questionService) {
         this.interviewStateService = interviewStateService;
         this.questionGenerationService = questionGenerationService;
         this.interviewLogService = interviewLogService;
@@ -37,26 +33,36 @@ public class InterviewFlowServiceImpl implements InterviewFlowService {
     @Override
     @Transactional
     public Question startInterview(Long interviewId) {
-        // 1. Update State
+        // 1. 更新面试状态
         interviewStateService.start(interviewId);
 
-        // 2. Generate Questions (Pre-generate or Just-in-Time)
-        // For simplicity, we generate the first batch here and save them
-        List<Question> questions = questionGenerationService.generateQuestions(MOCK_RESUME, MOCK_JD, 5);
-        
-        // Save generated questions to DB if they are new (optional, or just use them for this session)
-        // Here we assume we pick the first one
-        if (questions.isEmpty()) {
-            throw new RuntimeException("Failed to generate questions");
+        // 2. 获取面试详情
+        Interview interview = interviewService.getById(interviewId);
+        if (interview == null) {
+            throw new RuntimeException("未找到面试记录: " + interviewId);
         }
-        
+
+        // 真实场景下，这里应该解析 PDF/Word 简历内容
+        String resumeContent = "简历地址: " + interview.getResumeUrl();
+        // 真实场景下，这里应该从职位服务获取 JD
+        String jobDescription = "职位ID: " + interview.getJobId() + ", 分类: " + interview.getCategory();
+
+        // 3. 生成面试题
+        List<Question> questions = questionGenerationService.generateQuestions(resumeContent, jobDescription, 5);
+
+        // 如果是新生成的题目，保存到数据库（可选，或者仅用于本次会话）
+        // 这里我们假设取第一个问题
+        if (questions.isEmpty()) {
+            throw new RuntimeException("生成面试题失败");
+        }
+
         Question firstQuestion = questions.get(0);
-        // Ensure question is saved so we have an ID
+        // 确保问题已保存，以便拥有 ID
         if (firstQuestion.getId() == null) {
             questionService.save(firstQuestion);
         }
 
-        // 3. Create Log Entry for Round 1
+        // 4. 创建第一轮面试日志
         createLog(interviewId, 1, firstQuestion.getContent());
 
         return firstQuestion;
@@ -65,7 +71,7 @@ public class InterviewFlowServiceImpl implements InterviewFlowService {
     @Override
     @Transactional
     public Question submitAnswer(Long interviewId, String answerText) {
-        // 1. Find current active log
+        // 1. 查找当前活跃的面试日志
         InterviewLog currentLog = interviewLogService.lambdaQuery()
                 .eq(InterviewLog::getInterviewId, interviewId)
                 .orderByDesc(InterviewLog::getRound)
@@ -73,32 +79,42 @@ public class InterviewFlowServiceImpl implements InterviewFlowService {
                 .one();
 
         if (currentLog == null) {
-            throw new RuntimeException("No active question found for interview: " + interviewId);
+            throw new RuntimeException("未找到该面试的活跃问题: " + interviewId);
         }
 
-        // 2. Save Answer
+        // 2. 保存回答
         currentLog.setAnswerText(answerText);
-        // TODO: Async Grading Trigger
+        // TODO: 触发异步评分
         interviewLogService.updateById(currentLog);
 
-        // 3. Determine Next Step (Follow-up or Next Question)
+        // 3. 决定下一步（追问或下一题）
         Question currentQuestion = new Question();
         currentQuestion.setContent(currentLog.getQuestionText());
-        // We might need more info about the question, but content is key for follow-up
+        // 我们可能需要更多关于问题的信息，但内容是追问的关键
 
         Question followUp = questionGenerationService.generateFollowUp(currentQuestion, answerText);
-        
+
         if (followUp != null) {
-            // Ask Follow-up
+            // 进行追问
             createLog(interviewId, currentLog.getRound() + 1, followUp.getContent());
             return followUp;
         } else {
-            // Next New Question
-            // In a real app, we would retrieve the pre-generated list or generate a new one based on progress
-            // Here we simply generate ONE new question for the next round
-            List<Question> nextQuestions = questionGenerationService.generateQuestions(MOCK_RESUME, MOCK_JD, 1);
+            // 下一个新问题
+            // 在真实应用中，我们会检索预生成的列表或根据进度生成新问题
+            // 这里我们简单地为下一轮生成一个新问题
+
+            // 再次获取面试详情以获取上下文
+            Interview interview = interviewService.getById(interviewId);
+            if (interview == null) {
+                throw new RuntimeException("未找到面试记录: " + interviewId);
+            }
+            String resumeContent = "简历地址: " + interview.getResumeUrl();
+            String jobDescription = "职位ID: " + interview.getJobId() + ", 分类: " + interview.getCategory();
+
+            List<Question> nextQuestions = questionGenerationService.generateQuestions(resumeContent, jobDescription,
+                    1);
             if (nextQuestions.isEmpty()) {
-                // End Interview if no more questions
+                // 如果没有更多问题，结束面试
                 interviewStateService.complete(interviewId);
                 return null;
             }

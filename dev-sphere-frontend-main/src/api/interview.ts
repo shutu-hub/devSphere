@@ -21,13 +21,13 @@ export interface Question {
 
 export interface CreateInterviewReq {
     jobId?: string
-    resumeUrl?: string // Optional, if we support URL directly
-    domain?: string // To be passed to backend if needed for initial context
+    resumeUrl?: string
+    category?: string
 }
 
 export const createInterview = (data: CreateInterviewReq) => {
     return request({
-        url: '/interviews',
+        url: '/interview/interviews',
         method: 'post',
         data
     })
@@ -35,14 +35,14 @@ export const createInterview = (data: CreateInterviewReq) => {
 
 export const startInterview = (id: string) => {
     return request({
-        url: `/interviews/${id}/start`,
+        url: `/interview/interviews/${id}/start`,
         method: 'post'
     })
 }
 
 export const submitAnswer = (id: string, answer: string) => {
     return request({
-        url: `/interviews/${id}/submit`,
+        url: `/interview/interviews/${id}/submit`,
         method: 'post',
         data: { answer }
     })
@@ -50,14 +50,14 @@ export const submitAnswer = (id: string, answer: string) => {
 
 export const completeInterview = (id: string) => {
     return request({
-        url: `/interviews/${id}/complete`,
+        url: `/interview/interviews/${id}/complete`,
         method: 'post'
     })
 }
 
 export const getInterview = (id: string) => {
     return request({
-        url: `/interviews/${id}`,
+        url: `/interview/interviews/${id}`,
         method: 'get'
     })
 }
@@ -67,7 +67,7 @@ export const uploadFile = (file: File) => {
     formData.append('file', file)
     formData.append('biz', 'resume')
     return request({
-        url: '/file/upload',
+        url: '/oss/file/upload',
         method: 'post',
         data: formData,
         headers: {

@@ -3,7 +3,9 @@ package com.shutu.service;
 import com.shutu.commons.mybatis.service.BaseService;
 import com.shutu.commons.tools.page.PageData;
 import com.shutu.commons.tools.utils.Result;
+import com.shutu.model.LoginRequest;
 import com.shutu.model.dto.SysUserDTO;
+import com.shutu.model.dto.UserTokenDTO;
 import com.shutu.model.entity.SysUserEntity;
 import java.util.List;
 import java.util.Map;
@@ -87,4 +89,6 @@ public interface SysUserService extends BaseService<SysUserEntity> {
     List<SysUserEntity> queryUsersByIds(List<Long> userIds);
 
     List<SysUserDTO> getUsersByIds(List<Long> ids);
+
+    UserTokenDTO login(LoginRequest loginRequest);
 }

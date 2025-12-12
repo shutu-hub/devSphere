@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.shutu.commons.security.user.SecurityUser;
 import com.shutu.commons.security.user.UserDetail;
 import com.shutu.commons.tools.enums.SuperAdminEnum;
+import com.shutu.commons.tools.exception.UnauthorizedException;
 import com.shutu.commons.tools.page.PageData;
 import com.shutu.commons.tools.utils.ConvertUtils;
 import com.shutu.commons.tools.utils.Result;
 import com.shutu.dao.SysUserDao;
+import com.shutu.model.LoginRequest;
 import com.shutu.model.dto.SysUserDTO;
+import com.shutu.model.dto.UserTokenDTO;
 import com.shutu.model.entity.SysUserEntity;
 import com.shutu.service.*;
 import com.shutu.commons.mybatis.service.impl.BaseServiceImpl;
@@ -203,6 +206,36 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
     @Override
     public Long getLeaderIdListByUserId(Long userId) {
         return baseDao.getLeaderIdListByUserId(userId);
+    }
+
+    @Override
+    public UserTokenDTO login(LoginRequest loginRequest) {
+        // 校验参数
+        if (loginRequest == null || StringUtils.isEmpty(loginRequest.getPhone())
+                || StringUtils.isEmpty(loginRequest.getPassword())) {
+            throw new UnauthorizedException("用户名或密码不能为空");
+        }
+
+        // 根据用户名查询用户信息
+        SysUserEntity user = baseDao.getUserDetailByPhone(loginRequest.getPhone());
+        
+        // 用户不存在
+        if (user == null) {
+            throw new UnauthorizedException("用户名或密码错误");
+        }
+
+        //状态为停用
+        if (user.getStatus() != null && user.getStatus() == 0) {
+            throw new UnauthorizedException("账户已被停用，请联系管理员");
+        }
+
+        // 校验密码
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new UnauthorizedException("用户名或密码错误");
+        }
+
+        // 生成并返回token
+        return sysUserTokenService.createToken(user.getId());
     }
 
     @Override

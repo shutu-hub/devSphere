@@ -115,7 +115,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.shutu.devSphere.ChatApplication</mainClass>
+                    <mainClass>com.shutu.ChatApplication</mainClass>
                     <!-- 如果这是要运行的主程序，建议把 skip 改为 false 或者直接删掉这一行 -->
                     <skip>false</skip>
                 </configuration>

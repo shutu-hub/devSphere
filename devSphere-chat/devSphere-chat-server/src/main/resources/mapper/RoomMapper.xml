@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.shutu.devSphere.mapper.RoomMapper">
+<mapper namespace="com.shutu.mapper.RoomMapper">
 
-    <resultMap id="BaseResultMap" type="com.shutu.devSphere.model.entity.Room">
+    <resultMap id="BaseResultMap" type="com.shutu.model.entity.Room">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="type" column="type" jdbcType="INTEGER"/>
             <result property="hotFlag" column="hotFlag" jdbcType="INTEGER"/>

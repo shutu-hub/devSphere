@@ -111,4 +111,12 @@
         SELECT * FROM sys_user WHERE username = #{username} LIMIT 1
     </select>
 
+    <!--  根据手机号查询用户信息   -->
+    <select id="getUserDetailByPhone" resultType="com.shutu.model.entity.SysUserEntity">
+        SELECT * FROM sys_user where phone = #{phone}
+    </select>
+
 </mapper>
+
+
+

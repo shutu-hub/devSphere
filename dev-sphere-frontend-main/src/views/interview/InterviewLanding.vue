@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-900 text-white font-sans flex flex-col relative overflow-hidden">
+  <div class="min-h-screen bg-gray-900 text-white font-sans flex flex-col relative overflow-y-auto">
     <!-- Background Effects -->
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
       <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]"></div>
@@ -18,7 +18,7 @@
       <router-link to="/" class="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-all">退出</router-link>
     </header>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-8 max-w-6xl mx-auto w-full gap-12 z-10">
+    <main class="flex-1 flex flex-col items-center justify-center p-8 pb-20 max-w-6xl mx-auto w-full gap-12 z-10">
       
       <!-- Hero -->
       <div class="text-center space-y-6 animate-fade-in-up">
@@ -165,7 +165,7 @@ const handleStart = async () => {
       isUploading.value = true;
       try {
         const res = await uploadFile(file.value);
-        resumeUrl = res as unknown as string; 
+        resumeUrl = (res as any).url; 
       } catch (e) {
         console.error('Upload failed', e);
         alert('简历上传失败，请重试');
@@ -188,7 +188,8 @@ const handleStart = async () => {
 
     const res = await createInterview({
         jobId: mockJobIds[selectedDomain.value] || '1',
-        // Pass resumeUrl if backend supports it in future
+        resumeUrl: resumeUrl,
+        category: selectedDomain.value
     });
     
     const interview = res as any; 

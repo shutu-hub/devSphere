@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI面试系统 - 智能面试平台</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f172a',
+                        secondary: '#1e293b',
+                        accent: '#06b6d4',
+                        highlight: '#22d3ee',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass-effect {
+                @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-lg;
+            }
+            .text-gradient {
+                @apply bg-clip-text text-transparent bg-gradient-to-r from-accent to-highlight;
+            }
+            .audio-bar {
+                @apply bg-white/30 rounded-full transition-all duration-150;
+            }
+            .audio-bar-active {
+                @apply bg-accent;
+            }
+            .progress-ring-circle {
+                transition: stroke-dashoffset 0.35s;
+                transform: rotate(-90deg);
+                transform-origin: 50% 50%;
+            }
+        }
+    </style>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .interviewer-container {
+            position: relative;
+            width: 100%;
+            height: 50vh;
+            overflow: hidden;
+        }
+        
+        .interviewer-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/925069744396959758~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1780220733&x-signature=c2EB6WfXJuNk486rZASGRRChUPY%3D');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px) brightness(0.4);
+            z-index: 0;
+        }
+        
+        .interviewer {
+            position: relative;
+            z-index: 1;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
+        
+        .interviewer img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .question-card {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.2);
+        }
+        
+        .audio-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 40px;
+        }
+        
+        .audio-visualizer .bar {
+            width: 4px;
+            height: 100%;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: height 0.1s ease, background-color 0.2s ease;
+        }
+        
+        .audio-visualizer .bar.active {
+            background-color: #06b6d4;
+        }
+        
+        .mic-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+        
+        .mic-button.active {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: #06b6d4;
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.7);
+        }
+        
+        .mic-button.active::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(6, 182, 212, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .countdown-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .countdown-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #06b6d4, #22d3ee);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        .interview-stats {
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .interview-stats:hover {
+            transform: translateY(-3px);
+        }
+        
+        .next-question-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .next-question-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(6, 182, 212, 0.4);
+        }
+        
+        .next-question-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* 粒子背景效果 */
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .interviewer {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .question-card {
+                margin: 0 10px;
+            }
+            
+            .countdown-container {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .countdown-text {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans text-white">
+    <!-- 粒子背景 -->
+    <div id="particles-js"></div>
+    
+    <div class="container mx-auto px-4 py-8 h-screen flex flex-col">
+        <!-- 顶部导航 -->
+        <header class="flex justify-between items-center mb-4">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-r from-accent to-highlight flex items-center justify-center mr-3">
+                    <i class="fa fa-comments text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gradient">AI面试助手</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- 倒计时 -->
+                <div class="countdown-container">
+                    <svg class="w-full h-full" viewBox="0 0 100 100">
+                        <circle class="text-white/10" stroke-width="8" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" />
+                        <circle class="progress-ring-circle text-accent" stroke-width="8" stroke="currentColor" fill="transparent" r="40" cx="50" cy="50" stroke-dasharray="251.2" stroke-dashoffset="0" />
+                    </svg>
+                    <div class="countdown-text" id="countdown">15:00</div>
+                </div>
+                
+                <!-- 面试进度 -->
+                <div class="hidden md:flex flex-col items-end">
+                    <span class="text-sm text-white/70">面试进度</span>
+                    <div class="flex items-center gap-2">
+                        <div class="progress-container w-32">
+                            <div class="progress-bar" style="width: 25%"></div>
+                        </div>
+                        <span class="text-sm font-medium">2/8</span>
+                    </div>
+                </div>
+                
+                <!-- 设置按钮 -->
+                <button class="w-10 h-10 rounded-full glass-effect flex items-center justify-center hover:bg-white/20 transition-all">
+                    <i class="fa fa-cog"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- 主要内容区域 -->
+        <main class="flex-grow flex flex-col">
+            <!-- 面试官区域 -->
+            <div class="interviewer-container flex flex-col items-center justify-center mb-8">
+                <div class="interviewer-bg"></div>
+                <div class="interviewer">
+                    <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/915302335932530804~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1780220733&x-signature=LSKO%2FbmtPmkN2P2ANVeAE5bfsbo%3D" alt="AI面试官">
+                </div>
+                <h2 class="text-xl font-semibold mt-4">张面试官</h2>
+                <p class="text-white/70 text-sm">技术总监 | 人工智能部门</p>
+            </div>
+            
+            <!-- 问题卡片 -->
+            <div class="question-card glass-effect p-6 mb-8 max-w-2xl mx-auto">
+                <div class="flex items-center mb-4">
+                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-accent/20 text-accent">问题 2/8</span>
+                    <span class="ml-2 text-xs text-white/50">预计回答时间: 2分钟</span>
+                </div>
+                <h3 class="text-xl font-medium mb-2">请详细描述一下您在过去的工作中，如何解决一个复杂的技术问题？请分享您的思考过程和最终解决方案。</h3>
+                <p class="text-white/70 text-sm">您可以点击下方麦克风按钮开始回答</p>
+            </div>
+            
+            <!-- 音频控制和可视化 -->
+            <div class="flex flex-col items-center justify-center">
+                <!-- 音频可视化 -->
+                <div class="audio-visualizer mb-6 w-full max-w-md">
+                    <!-- 音频条将通过JS动态生成 -->
+                </div>
+                
+                <!-- 麦克风按钮 -->
+                <div class="mic-button mb-6" id="micButton">
+                    <i class="fa fa-microphone text-2xl"></i>
+                </div>
+                
+                <!-- 控制按钮 -->
+                <div class="flex gap-4">
+                    <button class="px-6 py-2 rounded-full glass-effect hover:bg-white/20 transition-all">
+                        <i class="fa fa-pause mr-2"></i>暂停
+                    </button>
+                    <button class="px-6 py-2 rounded-full bg-gradient-to-r from-accent to-highlight hover:opacity-90 transition-all next-question-btn" disabled>
+                        下一题<i class="fa fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 底部状态栏 -->
+        <footer class="mt-8">
+            <div class="flex justify-between items-center">
+                <div class="flex gap-4">
+                    <div class="interview-stats glass-effect px-4 py-2 flex items-center gap-2">
+                        <i class="fa fa-clock-o text-accent"></i>
+                        <span class="text-sm">已用时间: 3:45</span>
+                    </div>
+                    <div class="interview-stats glass-effect px-4 py-2 flex items-center gap-2">
+                        <i class="fa fa-bar-chart text-accent"></i>
+                        <span class="text-sm">回答长度: 120秒</span>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center gap-2 glass-effect px-4 py-2 rounded-full">
+                    <div class="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
+                    <span class="text-sm">系统正常运行中</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- particles.js 库 -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    
+    <script>
+        // 初始化粒子背景
+        document.addEventListener('DOMContentLoaded', function() {
+            particlesJS('particles-js', {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: '#06b6d4' },
+                    shape: {
+                        type: 'circle',
+                        stroke: { width: 0, color: '#000000' },
+                    },
+                    opacity: {
+                        value: 0.3,
+                        random: true,
+                        anim: { enable: false }
+                    },
+                    size: {
+                        value: 3,
+                        random: true,
+                        anim: { enable: false }
+                    },
+                    line_linked: {
+                        enable: true,
+                        distance: 150,
+                        color: '#06b6d4',
+                        opacity: 0.2,
+                        width: 1
+                    },
+                    move: {
+                        enable: true,
+                        speed: 1,
+                        direction: 'none',
+                        random: true,
+                        straight: false,
+                        out_mode: 'out',
+                        bounce: false,
+                    }
+                },
+                interactivity: {
+                    detect_on: 'canvas',
+                    events: {
+                        onhover: { enable: true, mode: 'grab' },
+                        onclick: { enable: true, mode: 'push' },
+                        resize: true
+                    },
+                    modes: {
+                        grab: { distance: 140, line_linked: { opacity: 0.5 } },
+                        push: { particles_nb: 3 }
+                    }
+                },
+                retina_detect: true
+            });
+            
+            // 初始化音频可视化
+            initAudioVisualizer();
+            
+            // 初始化麦克风按钮事件
+            initMicButton();
+            
+            // 初始化倒计时
+            initCountdown();
+        });
+        
+        // 音频可视化
+        function initAudioVisualizer() {
+            const visualizer = document.querySelector('.audio-visualizer');
+            const barCount = 40;
+            
+            // 创建音频条
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'bar';
+                bar.style.height = `${Math.random() * 100}%`;
+                visualizer.appendChild(bar);
+            }
+            
+            // 模拟音频可视化效果
+            function animateBars() {
+                const bars = document.querySelectorAll('.bar');
+                bars.forEach(bar => {
+                    const height = Math.random() * 100;
+                    bar.style.height = `${height}%`;
+                    
+                    // 根据高度设置活跃状态
+                    if (height > 50) {
+                        bar.classList.add('active');
+                    } else {
+                        bar.classList.remove('active');
+                    }
+                });
+                
+                requestAnimationFrame(() => {
+                    setTimeout(animateBars, 100);
+                });
+            }
+            
+            // 默认不启动动画，等待麦克风激活
+            window.animateAudioBars = animateBars;
+        }
+        
+        // 麦克风按钮功能
+        function initMicButton() {
+            const micButton = document.getElementById('micButton');
+            const nextButton = document.querySelector('.next-question-btn');
+            let isRecording = false;
+            
+            micButton.addEventListener('click', function() {
+                isRecording = !isRecording;
+                
+                if (isRecording) {
+                    micButton.classList.add('active');
+                    micButton.innerHTML = '<i class="fa fa-stop text-2xl"></i>';
+                    
+                    // 启动音频可视化
+                    window.animateAudioBars();
+                    
+                    // 模拟录制一段时间后启用下一题按钮
+                    setTimeout(() => {
+                        nextButton.disabled = false;
+                    }, 5000);
+                } else {
+                    micButton.classList.remove('active');
+                    micButton.innerHTML = '<i class="fa fa-microphone text-2xl"></i>';
+                }
+            });
+            
+            // 下一题按钮事件
+            nextButton.addEventListener('click', function() {
+                if (!nextButton.disabled) {
+                    // 模拟加载下一题
+                    const questionCard = document.querySelector('.question-card h3');
+                    const questionNumber = document.querySelector('.question-card .text-xs.font-medium');
+                    
+                    // 淡出效果
+                    gsap.to(questionCard, {
+                        opacity: 0,
+                        y: 10,
+                        duration: 0.3,
+                        onComplete: () => {
+                            // 更新问题内容
+                            questionNumber.textContent = '问题 3/8';
+                            questionCard.textContent = '您如何看待人工智能技术在未来5年内对您所在行业的影响？请分享您的见解和准备如何适应这些变化。';
+                            
+                            // 淡入效果
+                            gsap.fromTo(questionCard, 
+                                { opacity: 0, y: 10 },
+                                { opacity: 1, y: 0, duration: 0.3 }
+                            );
+                            
+                            // 重置状态
+                            micButton.classList.remove('active');
+                            micButton.innerHTML = '<i class="fa fa-microphone text-2xl"></i>';
+                            nextButton.disabled = true;
+                            isRecording = false;
+                        }
+                    });
+                }
+            });
+        }
+        
+        // 倒计时功能
+        function initCountdown() {
+            const countdownEl = document.getElementById('countdown');
+            const circle = document.querySelector('.progress-ring-circle');
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference;
+            
+            let timeLeft = 15 * 60; // 15分钟，单位秒
+            const totalTime = timeLeft;
+            
+            function updateCountdown() {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // 更新进度环
+                const offset = circumference - (timeLeft / totalTime) * circumference;
+                circle.style.strokeDashoffset = offset;
+                
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    setTimeout(updateCountdown, 1000);
+                } else {
+                    // 时间到，结束面试
+                    alert('面试时间已结束，感谢您的参与！');
+                }
+            }
+            
+            updateCountdown();
+        }
+    </script>
+</body>
+</html>

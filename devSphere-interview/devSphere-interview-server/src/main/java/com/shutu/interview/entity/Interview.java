@@ -50,5 +50,18 @@ public class Interview extends BaseEntity {
     /**
      * 面试总结
      */
+    /**
+     * 面试总结
+     */
     private String summary;
+
+    /**
+     * 简历地址
+     */
+    private String resumeUrl;
+
+    /**
+     * 面试方向/分类 (如: Java, Frontend)
+     */
+    private String category;
 }

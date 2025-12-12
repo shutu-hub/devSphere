@@ -24,6 +24,10 @@
                     <artifactId>lombok</artifactId>
                     <groupId>org.projectlombok</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>mybatis-spring</artifactId>
+                    <groupId>org.mybatis</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

@@ -96,4 +96,12 @@ public interface SysUserDao extends BaseDao<SysUserEntity> {
      * @return 匹配的用户实体，如果不存在则返回 null
      */
     SysUserEntity findByUsername(@Param("username") String username);
+
+    /**
+     * 根据手机号查询用户
+     * @param phone 手机号
+     * @return 匹配的用户实体
+     */
+    SysUserEntity getUserDetailByPhone(String phone);
+
 }
