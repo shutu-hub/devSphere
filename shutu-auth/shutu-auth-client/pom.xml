@@ -4,7 +4,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.shutu</groupId>
     <artifactId>shutu-auth-client</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
 
     <parent>
         <groupId>com.shutu</groupId>
@@ -16,7 +15,6 @@
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-commons-security</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <artifactId>lombok</artifactId>

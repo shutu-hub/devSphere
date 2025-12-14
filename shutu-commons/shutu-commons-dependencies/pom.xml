@@ -25,21 +25,56 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- 内部模块依赖建议也放在这里管理 -->
+            <!-- 内部模块依赖 -->
             <dependency>
                 <groupId>com.shutu</groupId>
                 <artifactId>shutu-commons-security</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.shutu</groupId>
                 <artifactId>shutu-commons-swagger</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.shutu</groupId>
                 <artifactId>shutu-commons-tools</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-commons-log</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-commons-mybatis</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-commons-dynamic-datasource</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-auth-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-auth-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-admin-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.shutu</groupId>
+                <artifactId>shutu-admin-server</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- 第三方依赖 -->

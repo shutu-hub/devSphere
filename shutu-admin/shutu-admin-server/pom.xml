@@ -17,12 +17,10 @@
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-auth-client</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-commons-mybatis</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
             <exclusions>
                 <exclusion>
                     <artifactId>mybatis-spring</artifactId>
@@ -33,7 +31,6 @@
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-commons-security</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
@@ -81,13 +78,11 @@
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-admin-client</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-commons-log</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

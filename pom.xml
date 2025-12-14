@@ -90,7 +90,7 @@
             <dependency>
                 <groupId>com.shutu</groupId>
                 <artifactId>shutu-commons-dependencies</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
+                <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

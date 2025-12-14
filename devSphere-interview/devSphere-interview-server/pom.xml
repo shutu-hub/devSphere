@@ -4,7 +4,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.shutu</groupId>
     <artifactId>devSphere-interview-server</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>devSphere-interview-server</name>
     <description>devSphere-interview-server</description>
 
@@ -23,7 +22,6 @@
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-auth-client</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

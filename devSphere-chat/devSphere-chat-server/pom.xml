@@ -4,7 +4,6 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.shutu</groupId>
     <artifactId>devSphere-chat-server</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>devSphere-chat-server</name>
     <description>devSphere-chat-server</description>
 
@@ -29,7 +28,6 @@
         <dependency>
             <groupId>com.shutu</groupId>
             <artifactId>shutu-auth-client</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>
