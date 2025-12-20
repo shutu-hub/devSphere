@@ -1,6 +1,7 @@
 package com.shutu.config;
 
 import com.shutu.common.listener.RouteMessageListener;
+import com.shutu.constant.RedisKeyConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +27,7 @@ public class RedisPubSubConfig {
         container.setConnectionFactory(connectionFactory);
 
         // 监听专属 Topic: im:route:to:{myNodeId}
-        String topic = NodeConfig.TOPIC_NODE_ROUTE_PREFIX + nodeConfig.getNodeId();
+        String topic = RedisKeyConstant.TOPIC_NODE_ROUTE_PREFIX + nodeConfig.getNodeId();
 
         // 使用 MessageListenerAdapter 也可以，或者直接用实现类
         container.addMessageListener(routeMessageListener, new PatternTopic(topic));

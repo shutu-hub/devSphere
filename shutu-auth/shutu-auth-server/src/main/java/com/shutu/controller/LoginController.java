@@ -44,9 +44,6 @@ public class LoginController {
     private SysUserTokenService sysUserTokenService;
     private CaptchaService captchaService;
 
-    @Resource
-    private SysUserService sysUserService;
-
     @GetMapping("captcha")
     @Operation(summary = "验证码")
     @Parameter(name = "uuid", required = true)

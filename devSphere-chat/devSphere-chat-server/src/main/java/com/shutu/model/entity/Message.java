@@ -15,7 +15,7 @@ import java.util.Date;
 /**
  * 消息表
  */
-@TableName(value ="dev_sphere_message")
+@TableName(value = "dev_sphere_message")
 @Data
 @Builder
 @AllArgsConstructor
@@ -28,6 +28,11 @@ public class Message implements Serializable {
     private Long id;
 
     private Long serverMsgId;
+
+    /**
+     * 客户端临时ID (幂等去重)
+     */
+    private String tempId;
 
     /**
      * 会话表id

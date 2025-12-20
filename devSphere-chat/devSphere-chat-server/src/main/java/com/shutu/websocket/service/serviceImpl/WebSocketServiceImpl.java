@@ -4,9 +4,9 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.shutu.config.NodeConfig;
 import com.shutu.config.RedisStreamConfig;
 import com.shutu.config.ThreadPoolConfig;
+import com.shutu.constant.RedisKeyConstant;
 import com.shutu.model.dto.chat.RouteMessageDTO;
 import com.shutu.model.dto.ws.GroupMessageDTO;
 import com.shutu.model.entity.UserRoomRelate;
@@ -143,7 +143,7 @@ public class WebSocketServiceImpl implements WebSocketService {
                     .build();
 
             // 发送到目标节点的专属 Topic
-            String topic = NodeConfig.TOPIC_NODE_ROUTE_PREFIX + targetNodeId;
+            String topic = RedisKeyConstant.TOPIC_NODE_ROUTE_PREFIX + targetNodeId;
             redisTemplate.convertAndSend(topic, JSONUtil.toJsonStr(routeMsg));
             log.debug("消息路由转发: uid={}, targetNode={}", uid, targetNodeId);
         } else {

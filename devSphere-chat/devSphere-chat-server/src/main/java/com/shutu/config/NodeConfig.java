@@ -18,9 +18,16 @@ public class NodeConfig {
     @Value("${devsphere.server.node-id}")
     private String nodeId;
 
-    // Redis Key 模式定义
-    public static final String KEY_USER_LOCATION = "im:location:"; // + uid
-    public static final String TOPIC_NODE_ROUTE_PREFIX = "im:route:to:"; // + nodeId
+    @Value("${server.port:8080}")
+    private String serverPort;
+
+    /**
+     * 获取动态消费者名称：应用名:端口号
+     * 确保每个节点都是独立消费者
+     */
+    public String getConsumerName() {
+        return nodeId + ":" + serverPort;
+    }
 
     /**
      * 初始化该服务节点的标识
@@ -30,6 +37,6 @@ public class NodeConfig {
         if (nodeId == null || nodeId.trim().isEmpty()) {
             throw new IllegalArgumentException("Node ID 必须在配置文件中指定：devsphere.server.node-id");
         }
-       log.info(">>> [IM Node Init] 当前 IM 节点 ID: " + this.nodeId);
+        log.info(">>> [IM Node Init] 当前 IM 节点 ID: " + this.nodeId);
     }
 }

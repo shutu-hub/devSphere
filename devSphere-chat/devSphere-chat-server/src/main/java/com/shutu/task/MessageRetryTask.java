@@ -1,6 +1,7 @@
 package com.shutu.task;
 
 import com.shutu.common.listener.MessageStreamListener;
+import com.shutu.config.NodeConfig;
 import com.shutu.config.RedisStreamConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +11,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -24,7 +24,7 @@ public class MessageRetryTask {
 
     private final StringRedisTemplate redisTemplate;
     private final MessageStreamListener messageStreamListener; // 复用消息处理逻辑
-    private final RedisStreamConfig redisStreamConfig; // [NEW] 注入配置类以获取动态消费者名
+    private final NodeConfig nodeConfig; // 注入配置类以获取动态消费者名
 
     /**
      * 每 30 秒执行一次，检查处理超时的消息
@@ -36,7 +36,7 @@ public class MessageRetryTask {
             // 命令等同于: XPENDING im:message:stream im-group - + 10
             PendingMessages pendingMessages = redisTemplate.opsForStream().pending(
                     RedisStreamConfig.IM_STREAM_KEY,
-                    Consumer.from(RedisStreamConfig.IM_GROUP, redisStreamConfig.getConsumerName()),
+                    Consumer.from(RedisStreamConfig.IM_GROUP, nodeConfig.getConsumerName()),
                     Range.unbounded(),
                     10L // 每次只取 10 条，防止积压过多
             );
@@ -60,15 +60,17 @@ public class MessageRetryTask {
                 List<MapRecord<String, Object, Object>> records = redisTemplate.opsForStream().claim(
                         RedisStreamConfig.IM_STREAM_KEY,
                         RedisStreamConfig.IM_GROUP,
-                        redisStreamConfig.getConsumerName(), // 重新归属给自己
+                        nodeConfig.getConsumerName(), // 重新归属给自己
                         Duration.ofSeconds(60), // 只有闲置超过60秒的才抢
                         RecordId.of(recordId));
 
                 if (records != null && !records.isEmpty()) {
                     // 3. 再次调用监听器的逻辑进行处理
-                    // 注意：这里需要手动转换类型，因为 redisTemplate 泛型差异，实际项目中建议统一泛型
+                    // 需要双重强转来绕过泛型检查：MapRecord<String,Object,Object> -> Object ->
+                    // MapRecord<String,String,String>
                     @SuppressWarnings("unchecked")
-                    MapRecord<String, String, String> record = (MapRecord<String, String, String>) records.get(0);
+                    MapRecord<String, String, String> record = (MapRecord<String, String, String>) (Object) records
+                            .get(0);
                     messageStreamListener.onMessage(record);
                 }
             }

@@ -1,6 +1,7 @@
 package com.shutu.service.impl;
 
 import com.shutu.config.NodeConfig;
+import com.shutu.constant.RedisKeyConstant;
 import com.shutu.service.UserLocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +45,7 @@ public class UserLocationServiceImpl implements UserLocationService {
      */
     @Override
     public void register(Long uid) {
-        String key = NodeConfig.KEY_USER_LOCATION + uid;
+        String key = RedisKeyConstant.KEY_USER_LOCATION + uid;
         // 绑定当前节点 ID
         redisTemplate.opsForValue().set(key, nodeConfig.getNodeId(), LOCATION_EXPIRE, TimeUnit.SECONDS);
     }
@@ -54,7 +55,7 @@ public class UserLocationServiceImpl implements UserLocationService {
      */
     @Override
     public void remove(Long uid) {
-        String key = NodeConfig.KEY_USER_LOCATION + uid;
+        String key = RedisKeyConstant.KEY_USER_LOCATION + uid;
         String currentNodeId = nodeConfig.getNodeId();
 
         // 使用 Lua 脚本保证原子性
@@ -66,7 +67,7 @@ public class UserLocationServiceImpl implements UserLocationService {
      */
     @Override
     public String getNode(Long uid) {
-        String key = NodeConfig.KEY_USER_LOCATION + uid;
+        String key = RedisKeyConstant.KEY_USER_LOCATION + uid;
         return redisTemplate.opsForValue().get(key);
     }
 

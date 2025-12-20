@@ -4,7 +4,6 @@ import com.shutu.common.listener.DlqMessageListener; // [NEW] 引入 DLQ 监听�
 import com.shutu.common.listener.MessageStreamListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -26,12 +25,8 @@ public class RedisStreamConfig {
     private final MessageStreamListener messageStreamListener;
     private final DlqMessageListener dlqMessageListener;
     private final StringRedisTemplate redisTemplate;
+    private final NodeConfig nodeConfig;
 
-    @Value("${devsphere.server.node-id}")
-    private String serverNodeId;
-
-    @Value("${server.port:8080}")
-    private String serverPort;
 
     // 主业务定义
     public static final String IM_STREAM_KEY = "im:message:stream";
@@ -41,14 +36,6 @@ public class RedisStreamConfig {
     public static final String DLQ_STREAM_KEY = "im:message:dlq";
     public static final String DLQ_GROUP = "dlq-group";
 
-
-    /**
-     * 获取动态消费者名称：应用名:端口号
-     * 确保每个节点都是独立消费者
-     */
-    public String getConsumerName() {
-        return serverNodeId + ":" + serverPort;
-    }
 
     @Bean
     public Subscription subscription(RedisConnectionFactory factory) {
@@ -70,14 +57,14 @@ public class RedisStreamConfig {
         // 4. 注册监听器
         // 4.1 主业务监听器 (处理正常消息)
         container.receive(
-                Consumer.from(IM_GROUP, getConsumerName()),
+                Consumer.from(IM_GROUP, nodeConfig.getConsumerName()),
                 StreamOffset.create(IM_STREAM_KEY, ReadOffset.lastConsumed()),
                 messageStreamListener);
 
         // 4.2 死信队列监听器 (处理毒消息)
         // DLQ 的逻辑比较简单（只入库），也可以复用 container
         Subscription subscription = container.receive(
-                Consumer.from(DLQ_GROUP, getConsumerName()),
+                Consumer.from(DLQ_GROUP, nodeConfig.getConsumerName()),
                 StreamOffset.create(DLQ_STREAM_KEY, ReadOffset.lastConsumed()),
                 dlqMessageListener);
 
